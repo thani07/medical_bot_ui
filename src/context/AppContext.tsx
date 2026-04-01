@@ -1,19 +1,26 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { Toast as ToastType } from '../types';
+import { useTheme, type Theme } from '../hooks/useTheme';
 
 interface AppState {
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (v: boolean) => void;
   toasts: ToastType[];
   addToast: (message: string, type?: ToastType['type']) => void;
   removeToast: (id: string) => void;
+  theme: Theme;
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [toasts, setToasts] = useState<ToastType[]>([]);
+  const { theme, toggleTheme } = useTheme();
 
   const addToast = useCallback((message: string, type: ToastType['type'] = 'error') => {
     const id = crypto.randomUUID();
@@ -26,7 +33,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AppContext.Provider value={{ sidebarOpen, setSidebarOpen, toasts, addToast, removeToast }}>
+    <AppContext.Provider value={{
+      sidebarOpen, setSidebarOpen,
+      sidebarCollapsed, setSidebarCollapsed,
+      toasts, addToast, removeToast, theme, toggleTheme
+    }}>
       {children}
     </AppContext.Provider>
   );

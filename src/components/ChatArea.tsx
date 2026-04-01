@@ -15,9 +15,10 @@ interface Props {
   sessionId: string;
   sessionTitle: string;
   onSessionUpdated: () => void;
+  onNewChat: () => void;
 }
 
-export default function ChatArea({ sessionId, sessionTitle, onSessionUpdated }: Props) {
+export default function ChatArea({ sessionId, sessionTitle, onSessionUpdated, onNewChat }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -172,6 +173,7 @@ export default function ChatArea({ sessionId, sessionTitle, onSessionUpdated }: 
         onOpenSymptoms={() => setSymptomsOpen(true)}
         onOpenSummary={() => setSummaryOpen(true)}
         onToggleSidebar={() => setSidebarOpen(true)}
+        onNewChat={onNewChat}
       />
 
       {/* Messages */}

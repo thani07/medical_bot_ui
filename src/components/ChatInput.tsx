@@ -13,7 +13,7 @@ export default function ChatInput({ onSendText, onSendVoice, disabled }: Props) 
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const voice = useVoiceRecorder();
-  const { addToast } = useApp();
+  const { addToast, theme } = useApp();
 
   useEffect(() => {
     if (!voice.isRecording) inputRef.current?.focus();
@@ -47,8 +47,13 @@ export default function ChatInput({ onSendText, onSendVoice, disabled }: Props) 
     onSendVoice(blob, voice.liveText);
   };
 
+  const isLight = theme === 'light';
+
   return (
-    <div className="px-4 py-3 border-t border-dark-500 relative">
+    <div className={`px-4 pt-3 pb-3 sm:pb-4 relative transition-colors duration-300 border-t
+      ${isLight ? 'border-slate-100 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' : 'border-dark-500 bg-dark-900'}`}
+      style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+    >
       {/* Voice recorder overlay */}
       {voice.isRecording && (
         <VoiceRecorder
@@ -60,8 +65,12 @@ export default function ChatInput({ onSendText, onSendVoice, disabled }: Props) 
         />
       )}
 
-      <div className="flex items-center gap-2 bg-dark-800 rounded-xl px-3 py-2 border border-dark-500
-        focus-within:border-accent-purple/50 transition-colors">
+      <div className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 border transition-all duration-300
+        focus-within:ring-4 focus-within:ring-accent-purple/10
+        ${isLight
+          ? 'bg-slate-50 border-slate-200 focus-within:border-accent-purple/40 focus-within:bg-white shadow-inner'
+          : 'bg-dark-800 border-dark-500 focus-within:border-accent-purple/30'
+        }`}>
         {/* Text input */}
         <input
           ref={inputRef}
@@ -71,8 +80,8 @@ export default function ChatInput({ onSendText, onSendVoice, disabled }: Props) 
           onKeyDown={handleKey}
           disabled={disabled || voice.isRecording}
           placeholder="Type your health question..."
-          className="flex-1 bg-transparent outline-none text-sm text-slate-200 placeholder-slate-500
-            font-body disabled:opacity-50"
+          className={`flex-1 bg-transparent outline-none text-sm font-body disabled:opacity-50
+            ${isLight ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500'}`}
         />
 
         {/* Mic button */}

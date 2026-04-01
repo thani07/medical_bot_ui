@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Message } from '../types';
 import { relativeTime, formatTimestamp } from '../utils/dateUtils';
+import { useApp } from '../context/AppContext';
 
 interface Props {
   message: Message;
@@ -9,8 +10,10 @@ interface Props {
 
 export default function MessageBubble({ message }: Props) {
   const [showTime, setShowTime] = useState(false);
+  const { theme } = useApp();
   const isUser = message.role === 'user';
   const isVoice = message.message_type === 'voice';
+  const isLight = theme === 'light';
 
   return (
     <div
@@ -20,7 +23,8 @@ export default function MessageBubble({ message }: Props) {
     >
       {/* Assistant avatar */}
       {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-dark-700 border border-dark-500 flex items-center justify-center text-xs flex-shrink-0 mt-1">
+        <div className={`w-7 h-7 rounded-full border flex items-center justify-center text-xs flex-shrink-0 mt-1
+          ${isLight ? 'bg-white border-slate-200 text-slate-400' : 'bg-dark-700 border-dark-500 text-slate-300'}`}>
           ✚
         </div>
       )}
@@ -28,10 +32,12 @@ export default function MessageBubble({ message }: Props) {
       <div className={`max-w-[75%] relative group ${isUser ? '' : ''}`}>
         {/* Bubble */}
         <div
-          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed
+          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-colors duration-300
             ${isUser
-              ? 'bg-gradient-to-br from-accent-fuchsia to-accent-violet text-white'
-              : 'bg-dark-600 border border-dark-500 text-slate-200'
+              ? 'bg-gradient-to-br from-accent-fuchsia to-accent-violet text-white shadow-sm'
+              : (isLight
+                  ? 'bg-slate-100 border border-slate-200 text-slate-800'
+                  : 'bg-dark-600 border border-dark-500 text-slate-200')
             }`}
         >
           {/* Voice badge */}
@@ -41,7 +47,8 @@ export default function MessageBubble({ message }: Props) {
             </span>
           )}
           {isVoice && !isUser && (
-            <span className="inline-block bg-accent-purple/20 rounded px-1.5 py-0.5 text-[10px] text-accent-purple mr-1.5 mb-0.5 align-middle">
+            <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] mr-1.5 mb-0.5 align-middle
+              ${isLight ? 'bg-violet-100 text-violet-600' : 'bg-accent-purple/20 text-accent-purple'}`}>
               🎤
             </span>
           )}

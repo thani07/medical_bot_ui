@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Session } from '../types';
 import { groupByDate } from '../utils/dateUtils';
+import { useApp } from '../context/AppContext';
 
 interface Props {
   sessions: Session[];
@@ -23,6 +24,7 @@ export default function Sidebar({
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameText, setRenameText] = useState('');
   const renameRef = useRef<HTMLInputElement>(null);
+  const { theme, setSidebarCollapsed } = useApp();
 
   const grouped = groupByDate(sessions);
   const groupOrder = ['Today', 'Yesterday', 'Previous 7 days', 'Older'];
@@ -55,24 +57,43 @@ export default function Sidebar({
     setRenaming(null);
   };
 
+  const isLight = theme === 'light';
+
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-dark-800 border-r border-dark-500">
+    <div className={`flex flex-col h-full border-r transition-colors duration-300
+      ${isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-dark-800 border-dark-500'}`}>
       {/* Header */}
-      <div className="p-4 border-b border-dark-500">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-violet to-accent-fuchsia flex items-center justify-center text-sm font-bold shadow-lg shadow-accent-purple/20">
-            H
+      <div className={`p-4 border-b ${isLight ? 'border-slate-100' : 'border-dark-500'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-violet to-accent-fuchsia flex items-center justify-center text-sm font-bold shadow-lg shadow-accent-purple/20 text-white">
+              H
+            </div>
+            <div>
+              <div className={`font-heading font-semibold text-sm ${isLight ? 'text-slate-800' : 'text-white'}`}>
+                Health Awareness
+              </div>
+              <div className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>Chatbot</div>
+            </div>
           </div>
-          <div>
-            <div className="font-heading font-semibold text-sm text-white">Health Awareness</div>
-            <div className="text-[10px] text-slate-500">Chatbot</div>
-          </div>
+
+          {/* Collapse button (Desktop only) */}
+          <button
+            onClick={() => setSidebarCollapsed(true)}
+            className={`hidden lg:flex w-7 h-7 items-center justify-center rounded-lg transition-colors
+              ${isLight ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-500 hover:text-white hover:bg-dark-700'}`}
+            title="Collapse sidebar"
+          >
+            <span className="text-sm font-mono font-bold">«</span>
+          </button>
         </div>
         <button
           onClick={() => { onHome(); onClose(); }}
-          className="w-full bg-dark-700 border border-dark-600 text-slate-200 text-sm
-            font-medium py-2.5 mb-2 rounded-xl hover:bg-dark-600 hover:text-white
-            transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+          className={`w-full border text-sm font-medium py-2.5 mb-2 rounded-xl transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]
+            ${isLight
+              ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+              : 'bg-dark-700 border-dark-600 text-slate-200 hover:bg-dark-600 hover:text-white'
+            }`}
         >
           <span>🏠</span> Home
         </button>
@@ -87,11 +108,11 @@ export default function Sidebar({
       </div>
 
       {/* Session list */}
-      <div className="flex-1 overflow-y-auto px-3 py-3">
+      <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-v">
         {sessions.length === 0 && (
           <div className="text-center py-10">
-            <p className="text-xs text-slate-600">No conversations yet</p>
-            <p className="text-[10px] text-slate-700 mt-1">Start a new chat!</p>
+            <p className={`text-xs ${isLight ? 'text-slate-400' : 'text-slate-600'}`}>No conversations yet</p>
+            <p className={`text-[10px] mt-1 ${isLight ? 'text-slate-300' : 'text-slate-700'}`}>Start a new chat!</p>
           </div>
         )}
 
@@ -100,7 +121,7 @@ export default function Sidebar({
           if (!items?.length) return null;
           return (
             <div key={group} className="mb-4">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-medium px-2 mb-1.5">
+              <p className={`text-[10px] uppercase tracking-widest font-medium px-2 mb-1.5 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
                 {group}
               </p>
               {items.map(s => (
@@ -111,8 +132,12 @@ export default function Sidebar({
                   className={`group flex items-center justify-between rounded-lg px-2.5 py-2 mb-0.5 cursor-pointer
                     transition-all duration-150 text-sm
                     ${s.id === activeId
-                      ? 'bg-dark-700 border-l-2 border-accent-purple text-white'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-dark-700/50'
+                      ? (isLight
+                          ? 'bg-violet-50 border-l-2 border-accent-purple text-violet-700'
+                          : 'bg-dark-700 border-l-2 border-accent-purple text-white')
+                      : (isLight
+                          ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-dark-700/50')
                     }`}
                 >
                   {renaming === s.id ? (
@@ -122,13 +147,16 @@ export default function Sidebar({
                       onChange={e => setRenameText(e.target.value)}
                       onBlur={finishRename}
                       onKeyDown={e => e.key === 'Enter' && finishRename()}
-                      className="bg-dark-600 border border-accent-purple/50 rounded px-2 py-0.5 text-xs text-white outline-none w-full"
+                      className={`border rounded px-2 py-0.5 text-xs outline-none w-full
+                        ${isLight
+                          ? 'bg-slate-50 border-accent-purple/30 text-slate-800'
+                          : 'bg-dark-600 border-accent-purple/50 text-white'}`}
                       onClick={e => e.stopPropagation()}
                     />
                   ) : (
                     <>
-                      <span className="truncate text-xs">{s.title}</span>
-                      <span className="text-[10px] text-slate-600 flex-shrink-0 ml-2">
+                      <span className="truncate text-xs font-medium">{s.title}</span>
+                      <span className={`text-[10px] flex-shrink-0 ml-2 ${isLight ? 'text-slate-400' : 'text-slate-600'}`}>
                         {s.message_count}
                       </span>
                     </>
@@ -143,25 +171,28 @@ export default function Sidebar({
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-[100] bg-dark-700 border border-dark-500 rounded-lg shadow-xl py-1 min-w-[140px] animate-fade-in"
+          className={`fixed z-[100] border rounded-lg shadow-xl py-1 min-w-[140px] animate-fade-in
+            ${isLight ? 'bg-white border-slate-200' : 'bg-dark-700 border-dark-500'}`}
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={e => e.stopPropagation()}
         >
           <button
             onClick={() => startRename(contextMenu.session)}
-            className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-dark-600 hover:text-white transition-colors"
+            className={`w-full text-left px-3 py-1.5 text-xs transition-colors
+              ${isLight ? 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' : 'text-slate-300 hover:bg-dark-600 hover:text-white'}`}
           >
             ✏️ Rename
           </button>
           <button
             onClick={() => { onArchive(contextMenu.session.id); setContextMenu(null); }}
-            className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-dark-600 hover:text-white transition-colors"
+            className={`w-full text-left px-3 py-1.5 text-xs transition-colors
+              ${isLight ? 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' : 'text-slate-300 hover:bg-dark-600 hover:text-white'}`}
           >
             📦 Archive
           </button>
           <button
             onClick={() => { onDelete(contextMenu.session); setContextMenu(null); }}
-            className="w-full text-left px-3 py-1.5 text-xs text-health-danger hover:bg-red-900/20 transition-colors"
+            className="w-full text-left px-3 py-1.5 text-xs text-health-danger hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
             🗑️ Delete
           </button>

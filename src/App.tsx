@@ -18,10 +18,12 @@ function AppInner() {
   const [deleteTarget, setDeleteTarget] = useState<Session | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [apiOk, setApiOk] = useState(true);
-  const { sidebarOpen, setSidebarOpen, addToast } = useApp();
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, addToast, theme } = useApp();
   const navigate = useNavigate();
   const params = useParams<{ sessionId?: string }>();
   const activeId = params.sessionId || null;
+
+  const isLight = theme === 'light';
 
   // Health check
   useEffect(() => {
@@ -101,38 +103,55 @@ function AppInner() {
   const activeSession = sessions.find(s => s.id === activeId);
 
   return (
-    <div className="h-screen flex relative overflow-hidden">
+    <div className={`h-[100dvh] flex relative overflow-hidden transition-colors duration-300 ${isLight ? 'bg-white' : 'bg-dark-900'}`}>
       <AnimatedBackground />
 
       {/* Offline banner */}
       {!apiOk && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-health-warning/90 text-dark-900 text-center py-2 text-xs font-medium">
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-health-warning/90 text-dark-900 text-center py-2 text-xs font-medium">
           ⚠️ Unable to connect to the server. Please check your connection.
         </div>
       )}
 
+      {/* Restore Sidebar Toggle (Desktop only) */}
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          className={`hidden lg:flex fixed left-4 top-1/2 -translate-y-1/2 z-[50] w-8 h-12 items-center justify-center rounded-r-xl border border-l-0 transition-all duration-300 shadow-sm
+            ${isLight ? 'bg-white border-slate-200 text-slate-400 hover:text-slate-800' : 'bg-dark-800 border-dark-500 text-slate-500 hover:text-white'}`}
+          title="Show sidebar"
+        >
+          <span className="text-lg">›</span>
+        </button>
+      )}
+
       {/* Sidebar */}
-      <Sidebar
-        sessions={sessions}
-        activeId={activeId}
-        onSelect={id => navigate(`/chat/${id}`)}
-        onNewChat={handleNewChat}
-        onHome={() => navigate('/')}
-        onRename={handleRename}
-        onArchive={handleArchive}
-        onDelete={s => setDeleteTarget(s)}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <div className={`transition-all duration-300 ease-in-out flex-shrink-0
+        ${sidebarCollapsed ? 'lg:w-0' : 'lg:w-[280px]'}
+        overflow-hidden`}>
+        <Sidebar
+          sessions={sessions}
+          activeId={activeId}
+          onSelect={id => navigate(`/chat/${id}`)}
+          onNewChat={handleNewChat}
+          onHome={() => navigate('/')}
+          onRename={handleRename}
+          onArchive={handleArchive}
+          onDelete={s => setDeleteTarget(s)}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10 h-full">
         {activeId && activeSession ? (
           <ChatArea
             key={activeId}
             sessionId={activeId}
             sessionTitle={activeSession.title}
             onSessionUpdated={loadSessions}
+            onNewChat={handleNewChat}
           />
         ) : (
           <WelcomeScreen onQuickStart={handleQuickStart} />
